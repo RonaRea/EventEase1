@@ -1,0 +1,58 @@
+@model EventEase.Web.Models.Booking
+
+@{
+    ViewData["Title"] = "Create Booking";
+    var hasAvailableEvents = (bool?)(ViewBag.HasAvailableEvents) ?? false;
+}
+
+<section class="form-shell">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">New booking</p>
+            <h1>Create a booking</h1>
+        </div>
+        <a class="btn btn-outline-primary" asp-action="Index">Back to list</a>
+    </div>
+
+    @if (!hasAvailableEvents)
+    {
+        <div class="alert alert-warning mt-3">
+            All current events already have bookings. Create a new event first or delete an existing booking.
+        </div>
+    }
+
+    <form asp-action="Create" method="post">
+        <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
+
+        <div class="form-grid">
+            <div>
+                <label asp-for="EventId" class="form-label"></label>
+                <select asp-for="EventId" class="form-select" asp-items="ViewBag.EventId">
+                    <option value="">Choose an event</option>
+                </select>
+                <span asp-validation-for="EventId" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="VenueId" class="form-label"></label>
+                <select asp-for="VenueId" class="form-select" asp-items="ViewBag.VenueId">
+                    <option value="">Choose a venue</option>
+                </select>
+                <p class="helper-text">The system will block any venue selection that overlaps with an existing booking.</p>
+                <span asp-validation-for="VenueId" class="text-danger"></span>
+            </div>
+            <div>
+                <label class="form-label">Booked on</label>
+                <input class="form-control" value="@Model.BookingDate.ToLocalTime().ToString("dd MMM yyyy HH:mm")" readonly />
+            </div>
+        </div>
+
+        <div class="actions-row mt-4">
+            <button type="submit" class="btn btn-primary" disabled="@(!hasAvailableEvents)">Save booking</button>
+            <a class="btn btn-outline-primary" asp-action="Index">Cancel</a>
+        </div>
+    </form>
+</section>
+
+@section Scripts {
+    <partial name="_ValidationScriptsPartial" />
+}

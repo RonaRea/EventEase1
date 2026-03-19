@@ -1,0 +1,41 @@
+@model EventEase.Web.Models.Event
+
+@{
+    ViewData["Title"] = "Delete Event";
+    var deleteBlocked = (bool?)(ViewData["DeleteBlocked"]) == true;
+}
+
+<section class="warning-shell">
+    <p class="eyebrow">Delete event</p>
+    <h1>@Model.EventName</h1>
+    <p class="panel-subtext">@Model.EventDate.ToString("dd MMM yyyy") to @Model.EndDate.ToString("dd MMM yyyy")</p>
+
+    @if (deleteBlocked)
+    {
+        <div class="alert alert-warning mt-4">
+            This event cannot be deleted because a booking already references it.
+        </div>
+    }
+    else
+    {
+        <p class="mt-4">This action will permanently remove the event from the schedule.</p>
+    }
+
+    <dl class="row mt-4">
+        <dt class="col-sm-3">Venue</dt>
+        <dd class="col-sm-9">@(Model.VenueId == null ? "Pending assignment" : "Assigned through bookings")</dd>
+        <dt class="col-sm-3">Bookings</dt>
+        <dd class="col-sm-9">@Model.Bookings.Count</dd>
+    </dl>
+
+    <div class="actions-row mt-4">
+        @if (!deleteBlocked)
+        {
+            <form asp-action="Delete" method="post">
+                <input asp-for="EventId" type="hidden" />
+                <button type="submit" class="btn btn-danger">Delete event</button>
+            </form>
+        }
+        <a class="btn btn-outline-primary" asp-action="Index">Back to list</a>
+    </div>
+</section>

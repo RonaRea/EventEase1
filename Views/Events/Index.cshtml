@@ -1,0 +1,91 @@
+@model IEnumerable<EventEase.Web.Models.Event>
+
+@{
+    ViewData["Title"] = "Events";
+}
+
+<section class="table-shell">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Manage events</p>
+            <h1>Event schedule</h1>
+            <p class="panel-subtext">Load events before a venue is available, then assign them through bookings.</p>
+        </div>
+        <a class="btn btn-primary" asp-action="Create">Add event</a>
+    </div>
+
+    <form asp-action="Index" method="get" class="toolbar">
+        <div class="filter-grid">
+            <div>
+                <label class="form-label" for="searchTerm">Search</label>
+                <input class="form-control" id="searchTerm" name="searchTerm" value="@ViewData["SearchTerm"]" placeholder="Event name or description" />
+            </div>
+            <div>
+                <label class="form-label" for="fromDate">From</label>
+                <input class="form-control" id="fromDate" name="fromDate" type="date" value="@ViewData["FromDate"]" />
+            </div>
+            <div>
+                <label class="form-label" for="toDate">To</label>
+                <input class="form-control" id="toDate" name="toDate" type="date" value="@ViewData["ToDate"]" />
+            </div>
+            <div>
+                <label class="form-label" for="status">Status</label>
+                <select class="form-select" id="status" name="status">
+                    <option value="">All events</option>
+                    <option value="booked" selected="@(Equals(ViewData["Status"], "booked"))">Booked</option>
+                    <option value="unbooked" selected="@(Equals(ViewData["Status"], "unbooked"))">Pending venue</option>
+                </select>
+            </div>
+            <div class="inline-actions">
+                <button class="btn btn-primary" type="submit">Filter</button>
+                <a class="btn btn-outline-primary" asp-action="Index">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <p class="empty-state">No events match the current filter.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Event</th>
+                        <th>Date range</th>
+                        <th>Venue</th>
+                        <th>Status</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var eventItem in Model)
+                    {
+                        <tr>
+                            <td>
+                                <strong>@eventItem.EventName</strong>
+                                <div class="detail-meta">@eventItem.Description</div>
+                            </td>
+                            <td>@eventItem.EventDate.ToString("dd MMM yyyy") to @eventItem.EndDate.ToString("dd MMM yyyy")</td>
+                            <td>@(eventItem.Venue?.VenueName ?? "Pending assignment")</td>
+                            <td>
+                                <span class="table-badge @(eventItem.VenueId == null ? "pending" : "confirmed")">
+                                    @(eventItem.VenueId == null ? "Pending venue" : "Booked")
+                                </span>
+                            </td>
+                            <td class="text-end">
+                                <div class="inline-actions justify-content-end">
+                                    <a class="text-link" asp-action="Details" asp-route-id="@eventItem.EventId">Details</a>
+                                    <a class="text-link" asp-action="Edit" asp-route-id="@eventItem.EventId">Edit</a>
+                                    <a class="text-link text-danger" asp-action="Delete" asp-route-id="@eventItem.EventId">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

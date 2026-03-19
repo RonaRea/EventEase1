@@ -1,0 +1,84 @@
+@model IEnumerable<EventEase.Web.Models.Booking>
+
+@{
+    ViewData["Title"] = "Bookings";
+}
+
+<section class="table-shell">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Manage bookings</p>
+            <h1>Booking register</h1>
+            <p class="panel-subtext">Bookings link one event to one venue and prevent double-booking across overlapping dates.</p>
+        </div>
+        <a class="btn btn-primary" asp-action="Create">Create booking</a>
+    </div>
+
+    <form asp-action="Index" method="get" class="toolbar">
+        <div class="filter-grid">
+            <div>
+                <label class="form-label" for="searchTerm">Search</label>
+                <input class="form-control" id="searchTerm" name="searchTerm" value="@ViewData["SearchTerm"]" placeholder="Event or venue" />
+            </div>
+            <div>
+                <label class="form-label" for="venueId">Venue</label>
+                <select class="form-select" id="venueId" name="venueId" asp-items="ViewBag.VenueFilter">
+                    <option value="">All venues</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="fromDate">From</label>
+                <input class="form-control" id="fromDate" name="fromDate" type="date" value="@ViewData["FromDate"]" />
+            </div>
+            <div>
+                <label class="form-label" for="toDate">To</label>
+                <input class="form-control" id="toDate" name="toDate" type="date" value="@ViewData["ToDate"]" />
+            </div>
+            <div class="inline-actions">
+                <button class="btn btn-primary" type="submit">Filter</button>
+                <a class="btn btn-outline-primary" asp-action="Index">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <p class="empty-state">No bookings match the current filter.</p>
+    }
+    else
+    {
+        <div class="table-responsive">
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>ID</th>
+                        <th>Event</th>
+                        <th>Venue</th>
+                        <th>Event dates</th>
+                        <th>Booked on</th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var booking in Model)
+                    {
+                        <tr>
+                            <td>#@booking.BookingId</td>
+                            <td>@booking.Event?.EventName</td>
+                            <td>@booking.Venue?.VenueName</td>
+                            <td>@booking.Event?.EventDate.ToString("dd MMM yyyy") to @booking.Event?.EndDate.ToString("dd MMM yyyy")</td>
+                            <td>@booking.BookingDate.ToLocalTime().ToString("dd MMM yyyy")</td>
+                            <td class="text-end">
+                                <div class="inline-actions justify-content-end">
+                                    <a class="text-link" asp-action="Details" asp-route-id="@booking.BookingId">Details</a>
+                                    <a class="text-link" asp-action="Edit" asp-route-id="@booking.BookingId">Edit</a>
+                                    <a class="text-link text-danger" asp-action="Delete" asp-route-id="@booking.BookingId">Delete</a>
+                                </div>
+                            </td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    }
+</section>

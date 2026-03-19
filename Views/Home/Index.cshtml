@@ -1,0 +1,142 @@
+﻿@model EventEase.Web.Models.ViewModels.DashboardViewModel
+
+@{
+    ViewData["Title"] = "Dashboard";
+}
+
+<section class="hero-panel">
+    <div>
+        <p class="eyebrow">EventEase Admin Platform</p>
+        <h1>Venue bookings, events, and scheduling in one workflow.</h1>
+        <p class="hero-copy">
+            The first phase focuses on the internal booking team: venue management, event loading,
+            booking creation, and conflict prevention.
+        </p>
+    </div>
+    <div class="hero-actions">
+        <a class="btn btn-primary" asp-controller="Bookings" asp-action="Create">Create booking</a>
+        <a class="btn btn-outline-primary" asp-controller="Events" asp-action="Create">Load event</a>
+    </div>
+</section>
+
+<section class="stats-grid">
+    <article class="metric-card">
+        <span class="metric-label">Venues</span>
+        <strong>@Model.VenueCount</strong>
+        <p>Registered locations available to the booking team.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-label">Events</span>
+        <strong>@Model.EventCount</strong>
+        <p>All planned and booked events currently on the platform.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-label">Bookings</span>
+        <strong>@Model.BookingCount</strong>
+        <p>Confirmed venue allocations linked to specific events.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-label">Pending Venue Assignments</span>
+        <strong>@Model.PendingEventCount</strong>
+        <p>Events waiting for a venue to become available.</p>
+    </article>
+    <article class="metric-card">
+        <span class="metric-label">Venues Available Today</span>
+        <strong>@Model.AvailableVenueCountToday</strong>
+        <p>Venues not occupied by any event overlapping today.</p>
+    </article>
+</section>
+
+<section class="dashboard-grid">
+    <article class="panel-card">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Upcoming</p>
+                <h2>Next events</h2>
+            </div>
+            <a asp-controller="Events" asp-action="Index">View all</a>
+        </div>
+
+        @if (Model.UpcomingEvents.Count == 0)
+        {
+            <p class="empty-state">No events have been loaded yet.</p>
+        }
+        else
+        {
+            <div class="list-stack">
+                @foreach (var eventItem in Model.UpcomingEvents)
+                {
+                    <div class="list-item">
+                        <div>
+                            <h3>@eventItem.EventName</h3>
+                            <p>@eventItem.EventDate.ToString("dd MMM yyyy") to @eventItem.EndDate.ToString("dd MMM yyyy")</p>
+                        </div>
+                        <span class="status-chip @(eventItem.VenueId == null ? "pending" : "confirmed")">
+                            @(eventItem.Venue?.VenueName ?? "Pending venue")
+                        </span>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="panel-card">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Recent</p>
+                <h2>Latest bookings</h2>
+            </div>
+            <a asp-controller="Bookings" asp-action="Index">Manage</a>
+        </div>
+
+        @if (Model.RecentBookings.Count == 0)
+        {
+            <p class="empty-state">No bookings recorded yet.</p>
+        }
+        else
+        {
+            <div class="list-stack">
+                @foreach (var booking in Model.RecentBookings)
+                {
+                    <div class="list-item">
+                        <div>
+                            <h3>#@booking.BookingId - @booking.Event?.EventName</h3>
+                            <p>@booking.Venue?.VenueName • booked @booking.BookingDate.ToLocalTime().ToString("dd MMM yyyy")</p>
+                        </div>
+                        <a class="text-link" asp-controller="Bookings" asp-action="Details" asp-route-id="@booking.BookingId">Details</a>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+
+    <article class="panel-card">
+        <div class="panel-heading">
+            <div>
+                <p class="eyebrow">Availability</p>
+                <h2>Open venues today</h2>
+            </div>
+            <a asp-controller="Venues" asp-action="Index">Browse venues</a>
+        </div>
+
+        @if (Model.AvailableVenuesToday.Count == 0)
+        {
+            <p class="empty-state">Every venue has a booking overlapping today.</p>
+        }
+        else
+        {
+            <div class="list-stack">
+                @foreach (var venue in Model.AvailableVenuesToday)
+                {
+                    <div class="list-item">
+                        <div>
+                            <h3>@venue.VenueName</h3>
+                            <p>@venue.Location • capacity @venue.Capacity</p>
+                        </div>
+                        <a class="text-link" asp-controller="Venues" asp-action="Details" asp-route-id="@venue.VenueId">Details</a>
+                    </div>
+                }
+            </div>
+        }
+    </article>
+</section>

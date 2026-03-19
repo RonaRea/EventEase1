@@ -1,0 +1,41 @@
+@model EventEase.Web.Models.Venue
+
+@{
+    ViewData["Title"] = "Delete Venue";
+    var deleteBlocked = (bool?)(ViewData["DeleteBlocked"]) == true;
+}
+
+<section class="warning-shell">
+    <p class="eyebrow">Delete venue</p>
+    <h1>@Model.VenueName</h1>
+    <p class="panel-subtext">@Model.Location</p>
+
+    @if (deleteBlocked)
+    {
+        <div class="alert alert-warning mt-4">
+            This venue cannot be deleted because at least one booking already references it.
+        </div>
+    }
+    else
+    {
+        <p class="mt-4">This action will permanently remove the venue from the system.</p>
+    }
+
+    <dl class="row mt-4">
+        <dt class="col-sm-3">Capacity</dt>
+        <dd class="col-sm-9">@Model.Capacity</dd>
+        <dt class="col-sm-3">Bookings</dt>
+        <dd class="col-sm-9">@Model.Bookings.Count</dd>
+    </dl>
+
+    <div class="actions-row mt-4">
+        @if (!deleteBlocked)
+        {
+            <form asp-action="Delete" method="post">
+                <input asp-for="VenueId" type="hidden" />
+                <button type="submit" class="btn btn-danger">Delete venue</button>
+            </form>
+        }
+        <a class="btn btn-outline-primary" asp-action="Index">Back to list</a>
+    </div>
+</section>

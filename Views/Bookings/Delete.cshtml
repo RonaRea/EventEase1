@@ -1,0 +1,28 @@
+@model EventEase.Web.Models.Booking
+
+@{
+    ViewData["Title"] = "Delete Booking";
+}
+
+<section class="warning-shell">
+    <p class="eyebrow">Delete booking</p>
+    <h1>Booking #@Model.BookingId</h1>
+    <p class="panel-subtext">@Model.Event?.EventName at @Model.Venue?.VenueName</p>
+
+    <p class="mt-4">Deleting this booking will release the venue assignment for the linked event.</p>
+
+    <dl class="row mt-4">
+        <dt class="col-sm-3">Event dates</dt>
+        <dd class="col-sm-9">@Model.Event?.EventDate.ToString("dd MMM yyyy") to @Model.Event?.EndDate.ToString("dd MMM yyyy")</dd>
+        <dt class="col-sm-3">Booked on</dt>
+        <dd class="col-sm-9">@Model.BookingDate.ToLocalTime().ToString("dd MMM yyyy HH:mm")</dd>
+    </dl>
+
+    <div class="actions-row mt-4">
+        <form asp-action="Delete" method="post">
+            <input asp-for="BookingId" type="hidden" />
+            <button type="submit" class="btn btn-danger">Delete booking</button>
+        </form>
+        <a class="btn btn-outline-primary" asp-action="Index">Back to list</a>
+    </div>
+</section>

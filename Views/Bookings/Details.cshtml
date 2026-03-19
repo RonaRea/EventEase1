@@ -1,0 +1,32 @@
+@model EventEase.Web.Models.Booking
+
+@{
+    ViewData["Title"] = "Booking Details";
+}
+
+<section class="detail-shell">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Booking details</p>
+            <h1>Booking #@Model.BookingId</h1>
+            <p class="panel-subtext">Created @Model.BookingDate.ToLocalTime().ToString("dd MMM yyyy HH:mm")</p>
+        </div>
+        <div class="inline-actions">
+            <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@Model.BookingId">Edit</a>
+            <a class="btn btn-outline-primary" asp-action="Index">Back to list</a>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <div class="panel-card">
+            <h2>Event</h2>
+            <p><strong>@Model.Event?.EventName</strong></p>
+            <p class="detail-meta">@Model.Event?.EventDate.ToString("dd MMM yyyy") to @Model.Event?.EndDate.ToString("dd MMM yyyy")</p>
+        </div>
+        <div class="panel-card">
+            <h2>Venue</h2>
+            <p><strong>@Model.Venue?.VenueName</strong></p>
+            <p class="detail-meta">@Model.Venue?.Location</p>
+        </div>
+    </div>
+</section>

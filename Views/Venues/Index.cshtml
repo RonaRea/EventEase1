@@ -1,0 +1,62 @@
+@model IEnumerable<EventEase.Web.Models.Venue>
+
+@{
+    ViewData["Title"] = "Venues";
+}
+
+<section class="table-shell">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Manage venues</p>
+            <h1>Venue directory</h1>
+            <p class="panel-subtext">Browse locations, image links, capacity, and booking usage.</p>
+        </div>
+        <a class="btn btn-primary" asp-action="Create">Add venue</a>
+    </div>
+
+    <form asp-action="Index" method="get" class="toolbar">
+        <div class="filter-grid">
+            <div>
+                <label class="form-label" for="searchTerm">Search</label>
+                <input class="form-control" id="searchTerm" name="searchTerm" value="@ViewData["SearchTerm"]" placeholder="Venue name or location" />
+            </div>
+            <div>
+                <label class="form-label" for="minCapacity">Minimum capacity</label>
+                <input class="form-control" id="minCapacity" name="minCapacity" type="number" min="1" value="@ViewData["MinCapacity"]" />
+            </div>
+            <div class="inline-actions">
+                <button class="btn btn-primary" type="submit">Filter</button>
+                <a class="btn btn-outline-primary" asp-action="Index">Reset</a>
+            </div>
+        </div>
+    </form>
+
+    @if (!Model.Any())
+    {
+        <p class="empty-state">No venues match the current filter.</p>
+    }
+    else
+    {
+        <div class="venue-grid">
+            @foreach (var venue in Model)
+            {
+                <article class="panel-card venue-card">
+                    <img src="@venue.ImageUrl" alt="@venue.VenueName" />
+                    <div class="venue-card-body">
+                        <h2>@venue.VenueName</h2>
+                        <p class="panel-subtext">@venue.Location</p>
+                        <div class="meta-row">
+                            <span>Capacity @venue.Capacity</span>
+                            <span>@venue.Bookings.Count booking(s)</span>
+                        </div>
+                        <div class="card-actions">
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@venue.VenueId">Details</a>
+                            <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@venue.VenueId">Edit</a>
+                            <a class="btn btn-sm btn-outline-danger" asp-action="Delete" asp-route-id="@venue.VenueId">Delete</a>
+                        </div>
+                    </div>
+                </article>
+            }
+        </div>
+    }
+</section>

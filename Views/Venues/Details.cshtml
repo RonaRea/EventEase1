@@ -1,0 +1,56 @@
+@model EventEase.Web.Models.Venue
+
+@{
+    ViewData["Title"] = "Venue Details";
+}
+
+<section class="detail-shell">
+    <div class="section-heading">
+        <div>
+            <p class="eyebrow">Venue details</p>
+            <h1>@Model.VenueName</h1>
+            <p class="panel-subtext">@Model.Location</p>
+        </div>
+        <div class="inline-actions">
+            <a class="btn btn-outline-primary" asp-action="Edit" asp-route-id="@Model.VenueId">Edit</a>
+            <a class="btn btn-outline-primary" asp-action="Index">Back to list</a>
+        </div>
+    </div>
+
+    <div class="detail-grid">
+        <div>
+            <img class="detail-image" src="@Model.ImageUrl" alt="@Model.VenueName" />
+        </div>
+        <div>
+            <dl class="row mb-4">
+                <dt class="col-sm-4">Capacity</dt>
+                <dd class="col-sm-8">@Model.Capacity</dd>
+                <dt class="col-sm-4">Current bookings</dt>
+                <dd class="col-sm-8">@Model.Bookings.Count</dd>
+                <dt class="col-sm-4">Image URL</dt>
+                <dd class="col-sm-8"><a href="@Model.ImageUrl" target="_blank" rel="noreferrer">Open image</a></dd>
+            </dl>
+
+            <h2>Linked events</h2>
+            @if (!Model.Events.Any())
+            {
+                <p class="empty-state">No events are currently pointing to this venue.</p>
+            }
+            else
+            {
+                <div class="list-stack">
+                    @foreach (var eventItem in Model.Events.OrderBy(item => item.EventDate))
+                    {
+                        <div class="list-item">
+                            <div>
+                                <h3>@eventItem.EventName</h3>
+                                <p>@eventItem.EventDate.ToString("dd MMM yyyy") to @eventItem.EndDate.ToString("dd MMM yyyy")</p>
+                            </div>
+                            <a class="text-link" asp-controller="Events" asp-action="Details" asp-route-id="@eventItem.EventId">View event</a>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    </div>
+</section>
