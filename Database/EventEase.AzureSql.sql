@@ -66,6 +66,14 @@ BEGIN
 END;
 GO
 
+IF COL_LENGTH(N'dbo.Event', N'ImageUrl') IS NULL
+BEGIN
+    ALTER TABLE dbo.Event
+        ADD ImageUrl NVARCHAR(500) NOT NULL
+        CONSTRAINT DF_Event_ImageUrl DEFAULT ('https://images.unsplash.com/photo-1511578314322-379afb476865?auto=format&fit=crop&w=900&q=80');
+END;
+GO
+
 MERGE dbo.EventType AS target
 USING (VALUES
     (1, N'Conference', 1),
