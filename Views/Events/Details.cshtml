@@ -18,14 +18,23 @@
     </div>
 
     <div class="detail-grid">
+        <div>
+            <img class="detail-image" src="@Model.ImageUrl" alt="@Model.EventName" />
+        </div>
         <div class="panel-card">
             <h2>Overview</h2>
             <p>@Model.Description</p>
             <dl class="row mb-0">
+                <dt class="col-sm-4">Event type</dt>
+                <dd class="col-sm-8">@(Model.EventType?.Name ?? "Unclassified")</dd>
                 <dt class="col-sm-4">Assigned venue</dt>
                 <dd class="col-sm-8">@(Model.Venue?.VenueName ?? "Pending assignment")</dd>
+                <dt class="col-sm-4">Venue availability</dt>
+                <dd class="col-sm-8">@(Model.Venue == null ? "Pending assignment" : Model.Venue.IsAvailable ? "Available" : "Unavailable")</dd>
                 <dt class="col-sm-4">Booking count</dt>
                 <dd class="col-sm-8">@Model.Bookings.Count</dd>
+                <dt class="col-sm-4">Stored image</dt>
+                <dd class="col-sm-8"><a href="@Model.ImageUrl" target="_blank" rel="noreferrer">Open image</a></dd>
             </dl>
         </div>
         <div class="panel-card">

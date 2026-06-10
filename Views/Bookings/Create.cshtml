@@ -22,6 +22,7 @@
     }
 
     <form asp-action="Create" method="post">
+        <partial name="_ValidationAlert" />
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <div class="form-grid">
@@ -37,7 +38,7 @@
                 <select asp-for="VenueId" class="form-select" asp-items="ViewBag.VenueId">
                     <option value="">Choose a venue</option>
                 </select>
-                <p class="helper-text">The system will block any venue selection that overlaps with an existing booking.</p>
+                <p class="helper-text">Only venues marked available are listed, and the system still blocks date overlaps.</p>
                 <span asp-validation-for="VenueId" class="text-danger"></span>
             </div>
             <div>

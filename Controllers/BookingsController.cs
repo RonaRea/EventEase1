@@ -24,20 +24,19 @@ public class BookingsController : Controller
 
         await PopulateVenueFilterAsync(venueId);
 
-        var bookingsQuery = _context.Bookings
+        var bookingsQuery = _context.BookingOverview
             .AsNoTracking()
-            .Include(booking => booking.Event)
-            .Include(booking => booking.Venue)
             .AsQueryable();
 
         if (!string.IsNullOrWhiteSpace(searchTerm))
         {
-            var likePattern = $"%{searchTerm.Trim()}%";
+            var trimmedSearch = searchTerm.Trim();
+            var likePattern = $"%{trimmedSearch}%";
+            var hasBookingId = int.TryParse(trimmedSearch, out var bookingId);
+
             bookingsQuery = bookingsQuery.Where(booking =>
-                booking.Event != null &&
-                booking.Venue != null &&
-                (EF.Functions.Like(booking.Event.EventName, likePattern) ||
-                 EF.Functions.Like(booking.Venue.VenueName, likePattern)));
+                EF.Functions.Like(booking.EventName, likePattern) ||
+                (hasBookingId && booking.BookingId == bookingId));
         }
 
         if (venueId.HasValue)
@@ -47,17 +46,17 @@ public class BookingsController : Controller
 
         if (fromDate.HasValue)
         {
-            bookingsQuery = bookingsQuery.Where(booking => booking.Event != null && booking.Event.EndDate >= fromDate.Value.Date);
+            bookingsQuery = bookingsQuery.Where(booking => booking.EndDate >= fromDate.Value.Date);
         }
 
         if (toDate.HasValue)
         {
-            bookingsQuery = bookingsQuery.Where(booking => booking.Event != null && booking.Event.EventDate <= toDate.Value.Date);
+            bookingsQuery = bookingsQuery.Where(booking => booking.EventDate <= toDate.Value.Date);
         }
 
         var bookings = await bookingsQuery
-            .OrderBy(booking => booking.Event!.EventDate)
-            .ThenBy(booking => booking.Event!.EventName)
+            .OrderBy(booking => booking.EventDate)
+            .ThenBy(booking => booking.EventName)
             .ToListAsync();
 
         return View(bookings);
@@ -108,6 +107,16 @@ public class BookingsController : Controller
         if (eventAlreadyBooked)
         {
             ModelState.AddModelError(nameof(booking.EventId), "The selected event already has a booking.");
+        }
+
+        var selectedVenue = await _context.Venues.FirstOrDefaultAsync(item => item.VenueId == booking.VenueId);
+        if (selectedVenue == null)
+        {
+            ModelState.AddModelError(nameof(booking.VenueId), "Please select a valid venue.");
+        }
+        else if (!selectedVenue.IsAvailable)
+        {
+            ModelState.AddModelError(nameof(booking.VenueId), "The selected venue is marked as unavailable for new bookings.");
         }
 
         if (eventItem != null)
@@ -192,6 +201,16 @@ public class BookingsController : Controller
         if (eventAlreadyBooked)
         {
             ModelState.AddModelError(nameof(booking.EventId), "The selected event already has a booking.");
+        }
+
+        var selectedVenue = await _context.Venues.FirstOrDefaultAsync(item => item.VenueId == booking.VenueId);
+        if (selectedVenue == null)
+        {
+            ModelState.AddModelError(nameof(booking.VenueId), "Please select a valid venue.");
+        }
+        else if (!selectedVenue.IsAvailable && selectedVenue.VenueId != existingBooking.VenueId)
+        {
+            ModelState.AddModelError(nameof(booking.VenueId), "The selected venue is marked as unavailable for new bookings.");
         }
 
         if (selectedEvent != null)
@@ -305,11 +324,12 @@ public class BookingsController : Controller
 
         var venueOptions = await _context.Venues
             .AsNoTracking()
+            .Where(venue => venue.IsAvailable || venue.VenueId == selectedVenueId)
             .OrderBy(venue => venue.VenueName)
             .Select(venue => new
             {
                 venue.VenueId,
-                Label = venue.VenueName + " (" + venue.Location + ")"
+                Label = venue.VenueName + " (" + venue.Location + ")" + (venue.IsAvailable ? string.Empty : " - unavailable")
             })
             .ToListAsync();
 

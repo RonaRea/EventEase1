@@ -25,9 +25,11 @@
             <dl class="row mb-4">
                 <dt class="col-sm-4">Capacity</dt>
                 <dd class="col-sm-8">@Model.Capacity</dd>
+                <dt class="col-sm-4">Availability</dt>
+                <dd class="col-sm-8">@(Model.IsAvailable ? "Available" : "Unavailable")</dd>
                 <dt class="col-sm-4">Current bookings</dt>
                 <dd class="col-sm-8">@Model.Bookings.Count</dd>
-                <dt class="col-sm-4">Image URL</dt>
+                <dt class="col-sm-4">Stored image</dt>
                 <dd class="col-sm-8"><a href="@Model.ImageUrl" target="_blank" rel="noreferrer">Open image</a></dd>
             </dl>
 

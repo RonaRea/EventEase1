@@ -1,4 +1,4 @@
-@model EventEase.Web.Models.Venue
+@model EventEase.Web.Models.ViewModels.VenueFormViewModel
 
 @{
     ViewData["Title"] = "Create Venue";
@@ -13,7 +13,8 @@
         <a class="btn btn-outline-primary" asp-action="Index">Back to list</a>
     </div>
 
-    <form asp-action="Create" method="post">
+    <form asp-action="Create" method="post" enctype="multipart/form-data">
+        <partial name="_ValidationAlert" />
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <div class="form-grid">
@@ -33,10 +34,18 @@
                 <span asp-validation-for="Capacity" class="text-danger"></span>
             </div>
             <div class="wide-field">
-                <label asp-for="ImageUrl" class="form-label"></label>
-                <input asp-for="ImageUrl" class="form-control" type="url" placeholder="https://example.com/image.jpg" />
-                <p class="helper-text">This phase uses placeholder image URLs instead of uploads.</p>
-                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                <div class="form-check mt-4">
+                    <input asp-for="IsAvailable" class="form-check-input" />
+                    <label asp-for="IsAvailable" class="form-check-label"></label>
+                </div>
+                <p class="helper-text">Only venues marked as available can be selected for new bookings.</p>
+            </div>
+            <div class="wide-field">
+                <label asp-for="ImageFile" class="form-label">Picture upload</label>
+                <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" />
+                <p class="helper-text">Choose an image file instead of pasting a URL. Supported formats: JPG, PNG, WEBP, and GIF.</p>
+                <p class="helper-text">The selected picture will be uploaded to Azure Blob Storage when the venue is saved.</p>
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
             </div>
         </div>
 

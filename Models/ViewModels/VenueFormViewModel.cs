@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
-namespace EventEase.Web.Models;
+namespace EventEase.Web.Models.ViewModels;
 
-public class Venue
+public class VenueFormViewModel
 {
     public int VenueId { get; set; }
 
@@ -18,15 +19,11 @@ public class Venue
     [Range(1, 500000)]
     public int Capacity { get; set; }
 
-    [Required]
-    [StringLength(500)]
-    [Url]
-    [Display(Name = "Image URL")]
-    public string ImageUrl { get; set; } = string.Empty;
-
     [Display(Name = "Available for bookings")]
     public bool IsAvailable { get; set; } = true;
 
-    public ICollection<Event> Events { get; set; } = [];
-    public ICollection<Booking> Bookings { get; set; } = [];
+    [Display(Name = "Venue image")]
+    public IFormFile? ImageFile { get; set; }
+
+    public string ExistingImageUrl { get; set; } = string.Empty;
 }

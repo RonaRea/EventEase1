@@ -21,6 +21,12 @@
                 <input class="form-control" id="searchTerm" name="searchTerm" value="@ViewData["SearchTerm"]" placeholder="Event name or description" />
             </div>
             <div>
+                <label class="form-label" for="eventTypeId">Event type</label>
+                <select class="form-select" id="eventTypeId" name="eventTypeId" asp-items="ViewBag.EventTypeFilter">
+                    <option value="">All types</option>
+                </select>
+            </div>
+            <div>
                 <label class="form-label" for="fromDate">From</label>
                 <input class="form-control" id="fromDate" name="fromDate" type="date" value="@ViewData["FromDate"]" />
             </div>
@@ -34,6 +40,15 @@
                     <option value="">All events</option>
                     <option value="booked" selected="@(Equals(ViewData["Status"], "booked"))">Booked</option>
                     <option value="unbooked" selected="@(Equals(ViewData["Status"], "unbooked"))">Pending venue</option>
+                </select>
+            </div>
+            <div>
+                <label class="form-label" for="venueAvailability">Venue availability</label>
+                <select class="form-select" id="venueAvailability" name="venueAvailability">
+                    <option value="">All venues</option>
+                    <option value="available" selected="@(Equals(ViewData["VenueAvailability"], "available"))">Available</option>
+                    <option value="unavailable" selected="@(Equals(ViewData["VenueAvailability"], "unavailable"))">Unavailable</option>
+                    <option value="unassigned" selected="@(Equals(ViewData["VenueAvailability"], "unassigned"))">Pending assignment</option>
                 </select>
             </div>
             <div class="inline-actions">
@@ -54,8 +69,10 @@
                 <thead>
                     <tr>
                         <th>Event</th>
+                        <th>Type</th>
                         <th>Date range</th>
                         <th>Venue</th>
+                        <th>Venue availability</th>
                         <th>Status</th>
                         <th></th>
                     </tr>
@@ -65,11 +82,22 @@
                     {
                         <tr>
                             <td>
-                                <strong>@eventItem.EventName</strong>
-                                <div class="detail-meta">@eventItem.Description</div>
+                                <div class="media-cell">
+                                    <img class="thumb-sm" src="@eventItem.ImageUrl" alt="@eventItem.EventName" />
+                                    <div>
+                                        <strong>@eventItem.EventName</strong>
+                                        <div class="detail-meta">@eventItem.Description</div>
+                                    </div>
+                                </div>
                             </td>
+                            <td><span class="table-badge confirmed">@(eventItem.EventType?.Name ?? "Unclassified")</span></td>
                             <td>@eventItem.EventDate.ToString("dd MMM yyyy") to @eventItem.EndDate.ToString("dd MMM yyyy")</td>
                             <td>@(eventItem.Venue?.VenueName ?? "Pending assignment")</td>
+                            <td>
+                                <span class="table-badge @((eventItem.Venue?.IsAvailable ?? false) ? "confirmed" : "pending")">
+                                    @(eventItem.Venue == null ? "Pending assignment" : eventItem.Venue.IsAvailable ? "Available" : "Unavailable")
+                                </span>
+                            </td>
                             <td>
                                 <span class="table-badge @(eventItem.VenueId == null ? "pending" : "confirmed")">
                                     @(eventItem.VenueId == null ? "Pending venue" : "Booked")

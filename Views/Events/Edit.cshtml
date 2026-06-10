@@ -1,4 +1,4 @@
-@model EventEase.Web.Models.Event
+@model EventEase.Web.Models.ViewModels.EventFormViewModel
 
 @{
     ViewData["Title"] = "Edit Event";
@@ -13,8 +13,9 @@
         <a class="btn btn-outline-primary" asp-action="Index">Back to list</a>
     </div>
 
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
         <input asp-for="EventId" type="hidden" />
+        <partial name="_ValidationAlert" />
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <div class="form-grid">
@@ -22,6 +23,13 @@
                 <label asp-for="EventName" class="form-label"></label>
                 <input asp-for="EventName" class="form-control" />
                 <span asp-validation-for="EventName" class="text-danger"></span>
+            </div>
+            <div>
+                <label asp-for="EventTypeId" class="form-label"></label>
+                <select asp-for="EventTypeId" class="form-select" asp-items="ViewBag.EventTypeId">
+                    <option value="">Choose an event type</option>
+                </select>
+                <span asp-validation-for="EventTypeId" class="text-danger"></span>
             </div>
             <div>
                 <label asp-for="EventDate" class="form-label"></label>
@@ -37,6 +45,18 @@
                 <label asp-for="Description" class="form-label"></label>
                 <textarea asp-for="Description" class="form-control" rows="5"></textarea>
                 <span asp-validation-for="Description" class="text-danger"></span>
+            </div>
+            <div class="wide-field">
+                <label asp-for="ImageFile" class="form-label">Picture upload</label>
+                <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" />
+                <p class="helper-text">Choose a new image file instead of pasting a URL. Leave this empty to keep the current event image.</p>
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            </div>
+            <div class="wide-field">
+                <label class="form-label">Current image</label>
+                <div class="image-preview-shell">
+                    <img class="form-image-preview" src="@Model.ExistingImageUrl" alt="@Model.EventName" />
+                </div>
             </div>
         </div>
 

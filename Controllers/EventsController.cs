@@ -1,6 +1,9 @@
 using EventEase.Web.Data;
 using EventEase.Web.Models;
+using EventEase.Web.Models.ViewModels;
+using EventEase.Web.Services;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Mvc.Rendering;
 using Microsoft.EntityFrameworkCore;
 
 namespace EventEase.Web.Controllers;
@@ -8,21 +11,28 @@ namespace EventEase.Web.Controllers;
 public class EventsController : Controller
 {
     private readonly ApplicationDbContext _context;
+    private readonly IImageStorageService _imageStorageService;
 
-    public EventsController(ApplicationDbContext context)
+    public EventsController(ApplicationDbContext context, IImageStorageService imageStorageService)
     {
         _context = context;
+        _imageStorageService = imageStorageService;
     }
 
-    public async Task<IActionResult> Index(string? searchTerm, DateTime? fromDate, DateTime? toDate, string? status)
+    public async Task<IActionResult> Index(string? searchTerm, int? eventTypeId, DateTime? fromDate, DateTime? toDate, string? status, string? venueAvailability)
     {
         ViewData["SearchTerm"] = searchTerm;
+        ViewData["EventTypeId"] = eventTypeId;
         ViewData["FromDate"] = fromDate?.ToString("yyyy-MM-dd");
         ViewData["ToDate"] = toDate?.ToString("yyyy-MM-dd");
         ViewData["Status"] = status;
+        ViewData["VenueAvailability"] = venueAvailability;
+
+        await PopulateEventTypeFilterAsync(eventTypeId);
 
         var eventsQuery = _context.Events
             .AsNoTracking()
+            .Include(eventItem => eventItem.EventType)
             .Include(eventItem => eventItem.Venue)
             .Include(eventItem => eventItem.Bookings)
             .AsQueryable();
@@ -32,7 +42,13 @@ public class EventsController : Controller
             var likePattern = $"%{searchTerm.Trim()}%";
             eventsQuery = eventsQuery.Where(eventItem =>
                 EF.Functions.Like(eventItem.EventName, likePattern) ||
-                EF.Functions.Like(eventItem.Description, likePattern));
+                EF.Functions.Like(eventItem.Description, likePattern) ||
+                EF.Functions.Like(eventItem.EventType!.Name, likePattern));
+        }
+
+        if (eventTypeId.HasValue)
+        {
+            eventsQuery = eventsQuery.Where(eventItem => eventItem.EventTypeId == eventTypeId.Value);
         }
 
         if (fromDate.HasValue)
@@ -54,6 +70,19 @@ public class EventsController : Controller
             eventsQuery = eventsQuery.Where(eventItem => eventItem.VenueId == null);
         }
 
+        if (string.Equals(venueAvailability, "available", StringComparison.OrdinalIgnoreCase))
+        {
+            eventsQuery = eventsQuery.Where(eventItem => eventItem.VenueId != null && eventItem.Venue != null && eventItem.Venue.IsAvailable);
+        }
+        else if (string.Equals(venueAvailability, "unavailable", StringComparison.OrdinalIgnoreCase))
+        {
+            eventsQuery = eventsQuery.Where(eventItem => eventItem.VenueId != null && eventItem.Venue != null && !eventItem.Venue.IsAvailable);
+        }
+        else if (string.Equals(venueAvailability, "unassigned", StringComparison.OrdinalIgnoreCase))
+        {
+            eventsQuery = eventsQuery.Where(eventItem => eventItem.VenueId == null);
+        }
+
         var events = await eventsQuery
             .OrderBy(eventItem => eventItem.EventDate)
             .ThenBy(eventItem => eventItem.EventName)
@@ -71,6 +100,7 @@ public class EventsController : Controller
 
         var eventItem = await _context.Events
             .AsNoTracking()
+            .Include(item => item.EventType)
             .Include(item => item.Venue)
             .Include(item => item.Bookings)
                 .ThenInclude(booking => booking.Venue)
@@ -84,10 +114,13 @@ public class EventsController : Controller
         return View(eventItem);
     }
 
-    public IActionResult Create()
+    public async Task<IActionResult> Create()
     {
-        return View(new Event
+        await PopulateEventTypeOptionsAsync();
+
+        return View(new EventFormViewModel
         {
+            EventTypeId = await GetDefaultEventTypeIdAsync(),
             EventDate = DateTime.Today,
             EndDate = DateTime.Today
         });
@@ -95,15 +128,44 @@ public class EventsController : Controller
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Create([Bind("EventName,EventDate,EndDate,Description")] Event eventItem)
+    public async Task<IActionResult> Create(EventFormViewModel model)
     {
-        eventItem.EventDate = eventItem.EventDate.Date;
-        eventItem.EndDate = eventItem.EndDate.Date;
+        model.EventDate = model.EventDate.Date;
+        model.EndDate = model.EndDate.Date;
+
+        if (model.ImageFile == null)
+        {
+            ModelState.AddModelError(nameof(model.ImageFile), "Please upload an event image.");
+        }
 
         if (!ModelState.IsValid)
         {
-            return View(eventItem);
+            await PopulateEventTypeOptionsAsync(model.EventTypeId);
+            return View(model);
         }
+
+        string imageUrl;
+
+        try
+        {
+            imageUrl = await _imageStorageService.UploadEventImageAsync(model.ImageFile!);
+        }
+        catch (InvalidOperationException ex)
+        {
+            ModelState.AddModelError(nameof(model.ImageFile), ex.Message);
+            await PopulateEventTypeOptionsAsync(model.EventTypeId);
+            return View(model);
+        }
+
+        var eventItem = new Event
+        {
+            EventName = model.EventName,
+            EventTypeId = model.EventTypeId,
+            EventDate = model.EventDate,
+            EndDate = model.EndDate,
+            Description = model.Description,
+            ImageUrl = imageUrl
+        };
 
         _context.Events.Add(eventItem);
         await _context.SaveChangesAsync();
@@ -125,26 +187,39 @@ public class EventsController : Controller
             return NotFound();
         }
 
-        return View(eventItem);
+        await PopulateEventTypeOptionsAsync(eventItem.EventTypeId);
+
+        return View(new EventFormViewModel
+        {
+            EventId = eventItem.EventId,
+            EventName = eventItem.EventName,
+            EventTypeId = eventItem.EventTypeId,
+            EventDate = eventItem.EventDate,
+            EndDate = eventItem.EndDate,
+            Description = eventItem.Description,
+            ExistingImageUrl = eventItem.ImageUrl
+        });
     }
 
     [HttpPost]
     [ValidateAntiForgeryToken]
-    public async Task<IActionResult> Edit(int id, [Bind("EventId,EventName,EventDate,EndDate,Description")] Event eventItem)
+    public async Task<IActionResult> Edit(int id, EventFormViewModel model)
     {
-        if (id != eventItem.EventId)
+        if (id != model.EventId)
         {
             return NotFound();
         }
 
-        eventItem.EventDate = eventItem.EventDate.Date;
-        eventItem.EndDate = eventItem.EndDate.Date;
+        model.EventDate = model.EventDate.Date;
+        model.EndDate = model.EndDate.Date;
 
         var existingEvent = await _context.Events.FindAsync(id);
         if (existingEvent == null)
         {
             return NotFound();
         }
+
+        model.ExistingImageUrl = existingEvent.ImageUrl;
 
         var existingBooking = await _context.Bookings
             .AsNoTracking()
@@ -154,8 +229,8 @@ public class EventsController : Controller
         {
             var hasConflict = await HasVenueConflictAsync(
                 existingBooking.VenueId,
-                eventItem.EventDate,
-                eventItem.EndDate,
+                model.EventDate,
+                model.EndDate,
                 existingBooking.BookingId);
 
             if (hasConflict)
@@ -166,13 +241,29 @@ public class EventsController : Controller
 
         if (!ModelState.IsValid)
         {
-            return View(eventItem);
+            await PopulateEventTypeOptionsAsync(model.EventTypeId);
+            return View(model);
         }
 
-        existingEvent.EventName = eventItem.EventName;
-        existingEvent.EventDate = eventItem.EventDate;
-        existingEvent.EndDate = eventItem.EndDate;
-        existingEvent.Description = eventItem.Description;
+        if (model.ImageFile != null)
+        {
+            try
+            {
+                existingEvent.ImageUrl = await _imageStorageService.UploadEventImageAsync(model.ImageFile);
+            }
+            catch (InvalidOperationException ex)
+            {
+                ModelState.AddModelError(nameof(model.ImageFile), ex.Message);
+                await PopulateEventTypeOptionsAsync(model.EventTypeId);
+                return View(model);
+            }
+        }
+
+        existingEvent.EventName = model.EventName;
+        existingEvent.EventTypeId = model.EventTypeId;
+        existingEvent.EventDate = model.EventDate;
+        existingEvent.EndDate = model.EndDate;
+        existingEvent.Description = model.Description;
 
         if (existingBooking == null)
         {
@@ -243,5 +334,36 @@ public class EventsController : Controller
                 booking.Event != null &&
                 booking.Event.EventDate <= endDate &&
                 booking.Event.EndDate >= startDate);
+    }
+
+    private async Task PopulateEventTypeOptionsAsync(int? selectedEventTypeId = null)
+    {
+        var eventTypes = await _context.EventTypes
+            .AsNoTracking()
+            .OrderBy(eventType => eventType.SortOrder)
+            .ThenBy(eventType => eventType.Name)
+            .ToListAsync();
+
+        ViewBag.EventTypeId = new SelectList(eventTypes, "EventTypeId", "Name", selectedEventTypeId);
+    }
+
+    private async Task PopulateEventTypeFilterAsync(int? selectedEventTypeId)
+    {
+        var eventTypes = await _context.EventTypes
+            .AsNoTracking()
+            .OrderBy(eventType => eventType.SortOrder)
+            .ThenBy(eventType => eventType.Name)
+            .ToListAsync();
+
+        ViewBag.EventTypeFilter = new SelectList(eventTypes, "EventTypeId", "Name", selectedEventTypeId);
+    }
+
+    private async Task<int> GetDefaultEventTypeIdAsync()
+    {
+        return await _context.EventTypes
+            .AsNoTracking()
+            .OrderBy(eventType => eventType.SortOrder)
+            .Select(eventType => eventType.EventTypeId)
+            .FirstAsync();
     }
 }

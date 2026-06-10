@@ -1,4 +1,4 @@
-@model EventEase.Web.Models.Venue
+@model EventEase.Web.Models.ViewModels.VenueFormViewModel
 
 @{
     ViewData["Title"] = "Edit Venue";
@@ -13,8 +13,9 @@
         <a class="btn btn-outline-primary" asp-action="Index">Back to list</a>
     </div>
 
-    <form asp-action="Edit" method="post">
+    <form asp-action="Edit" method="post" enctype="multipart/form-data">
         <input asp-for="VenueId" type="hidden" />
+        <partial name="_ValidationAlert" />
         <div asp-validation-summary="ModelOnly" class="text-danger mb-3"></div>
 
         <div class="form-grid">
@@ -34,9 +35,23 @@
                 <span asp-validation-for="Capacity" class="text-danger"></span>
             </div>
             <div class="wide-field">
-                <label asp-for="ImageUrl" class="form-label"></label>
-                <input asp-for="ImageUrl" class="form-control" type="url" />
-                <span asp-validation-for="ImageUrl" class="text-danger"></span>
+                <div class="form-check mt-4">
+                    <input asp-for="IsAvailable" class="form-check-input" />
+                    <label asp-for="IsAvailable" class="form-check-label"></label>
+                </div>
+                <p class="helper-text">Mark a venue unavailable when it should be excluded from new bookings and event filtering.</p>
+            </div>
+            <div class="wide-field">
+                <label asp-for="ImageFile" class="form-label">Picture upload</label>
+                <input asp-for="ImageFile" class="form-control" type="file" accept="image/*" />
+                <p class="helper-text">Choose a new image file instead of pasting a URL. Leave this empty to keep the current venue image.</p>
+                <span asp-validation-for="ImageFile" class="text-danger"></span>
+            </div>
+            <div class="wide-field">
+                <label class="form-label">Current image</label>
+                <div class="image-preview-shell">
+                    <img class="form-image-preview" src="@Model.ExistingImageUrl" alt="@Model.VenueName" />
+                </div>
             </div>
         </div>
 

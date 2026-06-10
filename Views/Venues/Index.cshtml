@@ -9,7 +9,7 @@
         <div>
             <p class="eyebrow">Manage venues</p>
             <h1>Venue directory</h1>
-            <p class="panel-subtext">Browse locations, image links, capacity, and booking usage.</p>
+            <p class="panel-subtext">Browse locations, stored images, capacity, and booking usage.</p>
         </div>
         <a class="btn btn-primary" asp-action="Create">Add venue</a>
     </div>
@@ -23,6 +23,14 @@
             <div>
                 <label class="form-label" for="minCapacity">Minimum capacity</label>
                 <input class="form-control" id="minCapacity" name="minCapacity" type="number" min="1" value="@ViewData["MinCapacity"]" />
+            </div>
+            <div>
+                <label class="form-label" for="isAvailable">Availability</label>
+                <select class="form-select" id="isAvailable" name="isAvailable">
+                    <option value="">All venues</option>
+                    <option value="true" selected="@(Equals(ViewData["IsAvailable"], "true"))">Available</option>
+                    <option value="false" selected="@(Equals(ViewData["IsAvailable"], "false"))">Unavailable</option>
+                </select>
             </div>
             <div class="inline-actions">
                 <button class="btn btn-primary" type="submit">Filter</button>
@@ -49,6 +57,9 @@
                             <span>Capacity @venue.Capacity</span>
                             <span>@venue.Bookings.Count booking(s)</span>
                         </div>
+                        <span class="table-badge @(venue.IsAvailable ? "confirmed" : "pending")">
+                            @(venue.IsAvailable ? "Available" : "Unavailable")
+                        </span>
                         <div class="card-actions">
                             <a class="btn btn-sm btn-outline-primary" asp-action="Details" asp-route-id="@venue.VenueId">Details</a>
                             <a class="btn btn-sm btn-outline-primary" asp-action="Edit" asp-route-id="@venue.VenueId">Edit</a>

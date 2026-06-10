@@ -1,3 +1,0 @@
-﻿<Project>
-  <Import Project="../build/EventEase.Web.props" />
-</Project>

@@ -1,4 +1,4 @@
-@model IEnumerable<EventEase.Web.Models.Booking>
+@model IEnumerable<EventEase.Web.Models.BookingOverview>
 
 @{
     ViewData["Title"] = "Bookings";
@@ -9,7 +9,7 @@
         <div>
             <p class="eyebrow">Manage bookings</p>
             <h1>Booking register</h1>
-            <p class="panel-subtext">Bookings link one event to one venue and prevent double-booking across overlapping dates.</p>
+            <p class="panel-subtext">Bookings combine event schedules, venue details, and booking dates in one searchable register.</p>
         </div>
         <a class="btn btn-primary" asp-action="Create">Create booking</a>
     </div>
@@ -18,7 +18,7 @@
         <div class="filter-grid">
             <div>
                 <label class="form-label" for="searchTerm">Search</label>
-                <input class="form-control" id="searchTerm" name="searchTerm" value="@ViewData["SearchTerm"]" placeholder="Event or venue" />
+                <input class="form-control" id="searchTerm" name="searchTerm" value="@ViewData["SearchTerm"]" placeholder="Booking ID or event name" />
             </div>
             <div>
                 <label class="form-label" for="venueId">Venue</label>
@@ -64,9 +64,20 @@
                     {
                         <tr>
                             <td>#@booking.BookingId</td>
-                            <td>@booking.Event?.EventName</td>
-                            <td>@booking.Venue?.VenueName</td>
-                            <td>@booking.Event?.EventDate.ToString("dd MMM yyyy") to @booking.Event?.EndDate.ToString("dd MMM yyyy")</td>
+                            <td>
+                                <div class="media-cell">
+                                    <img class="thumb-sm" src="@booking.EventImageUrl" alt="@booking.EventName" />
+                                    <div>
+                                        <strong>@booking.EventName</strong>
+                                        <div class="detail-meta">@booking.EventDescription</div>
+                                    </div>
+                                </div>
+                            </td>
+                            <td>
+                                <strong>@booking.VenueName</strong>
+                                <div class="detail-meta">@booking.VenueLocation • Capacity @booking.VenueCapacity</div>
+                            </td>
+                            <td>@booking.EventDate.ToString("dd MMM yyyy") to @booking.EndDate.ToString("dd MMM yyyy")</td>
                             <td>@booking.BookingDate.ToLocalTime().ToString("dd MMM yyyy")</td>
                             <td class="text-end">
                                 <div class="inline-actions justify-content-end">

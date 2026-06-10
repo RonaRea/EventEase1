@@ -1,8 +1,9 @@
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Http;
 
-namespace EventEase.Web.Models;
+namespace EventEase.Web.Models.ViewModels;
 
-public class Event : IValidatableObject
+public class EventFormViewModel : IValidatableObject
 {
     public int EventId { get; set; }
 
@@ -23,21 +24,14 @@ public class Event : IValidatableObject
     [StringLength(1000)]
     public string Description { get; set; } = string.Empty;
 
-    [Required]
-    [StringLength(500)]
-    [Display(Name = "Uploaded event image")]
-    public string ImageUrl { get; set; } = string.Empty;
-
+    [Range(1, int.MaxValue, ErrorMessage = "Please select an event type.")]
     [Display(Name = "Event type")]
     public int EventTypeId { get; set; }
 
-    public EventType? EventType { get; set; }
+    [Display(Name = "Event image")]
+    public IFormFile? ImageFile { get; set; }
 
-    [Display(Name = "Assigned venue")]
-    public int? VenueId { get; set; }
-
-    public Venue? Venue { get; set; }
-    public ICollection<Booking> Bookings { get; set; } = [];
+    public string ExistingImageUrl { get; set; } = string.Empty;
 
     public IEnumerable<ValidationResult> Validate(ValidationContext validationContext)
     {
